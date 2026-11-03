@@ -91,3 +91,10 @@ def test_pytest_runs_in_parallel_and_random_order(generated: Path) -> None:
 def test_renovate_extends_the_org_preset(generated: Path) -> None:
     renovate = (generated / "renovate.json5").read_text(encoding="utf-8")
     assert "github>Rakiura-Inc/.github:renovate-config.json5" in renovate
+
+
+def test_readme_licence_line_reads_cleanly(generated: Path) -> None:
+    # The default author, "Rakiura Inc.", already ends in a full stop.
+    readme = (generated / "README.md").read_text(encoding="utf-8")
+    assert "Rakiura Inc. See [LICENSE](LICENSE)." in readme
+    assert ".." not in readme

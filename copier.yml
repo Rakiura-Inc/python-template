@@ -37,7 +37,7 @@ _message_after_copy: |
     cd {{ _copier_conf.dst_path }}
     uv sync
     uvx prek install          # the git hooks, run on every commit
-    uvx prek run --all-files  # formats a few files the first time
+    uvx prek run --all-files  # every hook once; it should change nothing
     git add -A && git commit -m "Generate from Rakiura-Inc/python-template"
     gh repo create {{ github_org }}/{{ project_name }} --public --source . --push
 
