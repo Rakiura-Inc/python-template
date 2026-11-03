@@ -1,0 +1,91 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = [ "hatchling" ]
+
+[project]
+name = "{{ distribution_name }}"
+description = "{{ project_description }}"
+readme = "README.md"
+{% if license != "None" %}
+license = "{{ license }}"
+{% endif %}
+authors = [ { name = "{{ author_name }}" } ]
+requires-python = ">={{ min_python }}"
+classifiers = [
+{% if flavour == "notebooks" %}
+    "Framework :: Jupyter",
+{% endif %}
+    "Programming Language :: Python :: 3 :: Only",
+{% for version in python_versions.split() %}
+    "Programming Language :: Python :: {{ version }}",
+{% endfor %}
+]
+dynamic = [ "version" ]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/{{ github_org }}/{{ project_name }}"
+Source = "https://github.com/{{ github_org }}/{{ project_name }}"
+Issues = "https://github.com/{{ github_org }}/{{ project_name }}/issues"
+Changelog = "https://github.com/{{ github_org }}/{{ project_name }}/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+dev = [
+    # Having ruff in the venv helps with IDE's auto lint/format integrations
+    "ruff==0.17.3",
+{% if use_ty %}
+    "ty==0.0.96",
+{% endif %}
+{% if flavour == "notebooks" %}
+    { include-group = "helper" },
+{% endif %}
+    { include-group = "pytest" },
+{% if flavour == "notebooks" %}
+    { include-group = "run" },
+{% endif %}
+]
+{% if flavour == "notebooks" %}
+# The Rakiura notebook helper, which the notebooks install from GitHub in Colab.
+helper = [
+    "rakiura",
+]
+# Opens the notebooks locally: `uv run --group notebooks jupyter lab notebooks`.
+notebooks = [
+    "jupyterlab==4.6.5",
+]
+{% endif %}
+pytest = [
+    "pytest==9.2.0",
+    "pytest-randomly==5.0.0",
+    "pytest-xdist==3.8.0",
+]
+{% if flavour == "notebooks" %}
+# Executes the notebooks headless (`uv run scripts/run_notebooks.py`, the notebooks job in CI).
+run = [
+    "ipykernel==7.4.0",
+    "nbclient==0.11.0",
+    "nbformat==5.11.1",
+]
+{% endif %}
+
+[tool.hatch.version]
+{% if flavour == "library" %}
+path = "src/{{ package_name }}/_version.py"
+{% else %}
+path = "{{ package_name }}/_version.py"
+
+[tool.hatch.build.targets.sdist]
+include = [ "{{ package_name }}", "tests", "CHANGELOG.md", "CITATION.cff" ]
+
+[tool.hatch.build.targets.wheel]
+packages = [ "{{ package_name }}" ]
+{% endif %}
+
+[tool.uv]
+# The earliest version that supports the current lock file revision
+required-version = ">=0.8.4"
+{% if flavour == "notebooks" %}
+
+[tool.uv.sources]
+rakiura = { git = "https://github.com/Rakiura-Inc/rakiura-py", branch = "main" }
+{% endif %}

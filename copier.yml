@@ -1,0 +1,158 @@
+# The Rakiura-Inc Python template. Generate a repository with
+#   uvx copier copy --trust gh:Rakiura-Inc/python-template my-repo
+# and pull later template fixes into it with
+#   uvx copier update --trust
+
+_subdirectory: template
+_min_copier_version: "9.5.0"
+_answers_file: .copier-answers.yml
+
+_envops:
+  trim_blocks: true
+  lstrip_blocks: true
+  keep_trailing_newline: true
+
+_exclude:
+  # Patterns are gitignore-style; the leading slash anchors each one to the repository root.
+  - "{% if license == 'None' %}/LICENSE{% endif %}"
+  - "{% if flavour != 'library' %}/.github/workflows/release.yml{% endif %}"
+  - "{% if flavour != 'library' %}/src{% endif %}"
+  - "{% if flavour != 'notebooks' %}/notebooks{% endif %}"
+  - "{% if flavour != 'notebooks' %}/scripts{% endif %}"
+  - "{% if flavour != 'notebooks' %}/tests{% endif %}"
+  - "{% if flavour != 'notebooks' %}/{{ package_name }}{% endif %}"
+  - "{% if flavour != 'notebooks' %}/.python-version{% endif %}"
+
+_tasks:
+  # A notebooks repository commits uv.lock (the notebooks and CI run from it); a library does not.
+  - command: uv lock
+    when: "{{ flavour == 'notebooks' }}"
+  - command: git init --quiet --initial-branch main
+    when: "{{ _copier_operation == 'copy' }}"
+
+_message_after_copy: |
+  "{{ project_name }}" is ready in {{ _copier_conf.dst_path }}.
+
+  Next:
+    cd {{ _copier_conf.dst_path }}
+    uv sync
+    uvx prek install          # the git hooks, run on every commit
+    uvx prek run --all-files  # formats a few files the first time
+    git add -A && git commit -m "Generate from Rakiura-Inc/python-template"
+    gh repo create {{ github_org }}/{{ project_name }} --public --source . --push
+
+_message_after_update: |
+  "{{ project_name }}" is updated from the template. Resolve any conflicts (look for .rej files
+  and conflict markers), run `uvx prek run --all-files`, then review the diff and commit it.
+
+# ---- Questions ----
+
+flavour:
+  type: str
+  help: "What kind of repository is it?"
+  choices:
+    "library: a Python package others install (src layout, releases on tags)": library
+    "notebooks: teaching notebooks with a small helper package they install": notebooks
+  default: library
+
+project_name:
+  type: str
+  help: "Repository name (lowercase, with hyphens)"
+  default: "my-project"
+  validator: >-
+    {% if not (project_name | regex_search('^[a-z][a-z0-9-]*[a-z0-9]$')) %}
+    Use lowercase letters, digits and hyphens, starting with a letter.
+    {% endif %}
+
+package_name:
+  type: str
+  help: "Python import name of the package"
+  default: "{{ project_name | replace('-', '_') }}"
+  validator: >-
+    {% if not (package_name | regex_search('^[a-z][a-z0-9_]*$')) %}
+    Use lowercase letters, digits and underscores, starting with a letter.
+    {% endif %}
+
+project_description:
+  type: str
+  help: "One-line description (no double quotes, backslashes or line breaks)"
+  default: ""
+  validator: >-
+    {% if '"' in project_description or '\\' in project_description
+       or '\n' in project_description or '\r' in project_description %}
+    The description cannot contain double quotes, backslashes or line breaks.
+    {% endif %}
+
+github_org:
+  type: str
+  help: "GitHub organization (or user) that owns the repository"
+  default: "Rakiura-Inc"
+
+author_name:
+  type: str
+  help: "Author or copyright holder"
+  default: "Rakiura Inc."
+
+license:
+  type: str
+  help: "Licence"
+  choices:
+    - "MIT"
+    - "BSD-3-Clause"
+    - "Apache-2.0"
+    - "GPL-3.0-or-later"
+    - "None"
+  default: "MIT"
+
+copyright_year:
+  type: str
+  help: "Copyright year"
+  default: "{{ '%Y' | strftime }}"
+  when: "{{ license != 'None' }}"
+
+min_python:
+  type: str
+  help: "Oldest supported Python (tested up to {{ max_python }})"
+  choices:
+    - "3.11"
+    - "3.12"
+    - "3.13"
+    - "3.14"
+    - "3.15"
+  default: "3.11"
+
+colab_python:
+  type: str
+  help: "Python the notebooks are executed on in CI (the one Google Colab's current runtime ships)"
+  default: "3.13"
+  when: "{{ flavour == 'notebooks' }}"
+
+use_ty:
+  type: bool
+  help: "Type check with ty?"
+  default: "{{ flavour == 'library' }}"
+
+codeowners:
+  type: str
+  help: "Code owners for CODEOWNERS (a team, or @users separated by spaces)"
+  default: "@Rakiura-Inc/maintainers"
+
+# ---- Fixed values, updated with the template ----
+
+max_python:
+  type: str
+  default: "3.15"
+  when: false
+
+python_versions:
+  type: str
+  default: >-
+    {%- set first = min_python.split('.')[1] | int -%}
+    {%- set last = max_python.split('.')[1] | int -%}
+    {%- for minor in range(first, last + 1) -%}3.{{ minor }}{{ ' ' if not loop.last }}{%- endfor -%}
+  when: false
+
+distribution_name:
+  type: str
+  default: "{{ package_name | replace('_', '-') }}"
+  when: false

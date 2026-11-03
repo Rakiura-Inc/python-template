@@ -1,0 +1,29 @@
+# Generates a project of each flavour and runs that project's own checks: its tests, lint, type
+# check, build, notebook run and every git hook (zizmor included). Also tests `copier update`.
+
+name: "Tests"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request: ~
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Template tests
+    permissions:
+      contents: read  # check out the repository
+    uses: Rakiura-Inc/.github/.github/workflows/python-tests.yml@a9d8c7ab6db197d7b715098d6f91dd462fd8e87e  # v1.0.0
+    with:
+      # The oldest and newest supported Python: each generated project is tested on the same one.
+      python-versions: "[\"3.11\", \"3.15\"]"
+      sync-args: --locked
+      timeout-minutes: 30

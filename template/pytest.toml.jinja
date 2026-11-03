@@ -1,0 +1,9 @@
+[pytest]
+{% if flavour == "notebooks" %}
+testpaths = [ "tests" ]
+{% endif %}
+addopts = [
+    # Enable parallelization. pytest-randomly also shuffles the test order on every run; it
+    # prints the seed, and `uv run pytest -p randomly --randomly-seed=<seed>` repeats that order.
+    "-n", "auto",
+]

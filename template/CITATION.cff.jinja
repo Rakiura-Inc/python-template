@@ -1,0 +1,21 @@
+# How to cite this repository: https://citation-file-format.github.io/
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+type: software
+title: "{{ project_name }}"
+{% if project_description %}
+abstract: "{{ project_description }}"
+{% endif %}
+authors:
+  - name: "{{ author_name }}"
+repository-code: "https://github.com/{{ github_org }}/{{ project_name }}"
+{% if license != "None" %}
+license: {{ license }}
+{% endif %}
+{% if flavour == "notebooks" %}
+# Add the datasets and papers the notebooks use, so people cite them too:
+# references:
+#   - type: dataset
+#     title: "..."
+#     doi: 10.5281/zenodo.0000000
+{% endif %}

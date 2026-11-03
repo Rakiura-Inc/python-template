@@ -1,0 +1,96 @@
+# {{ project_name }}
+
+[![Tests](https://github.com/{{ github_org }}/{{ project_name }}/actions/workflows/tests.yml/badge.svg)](https://github.com/{{ github_org }}/{{ project_name }}/actions/workflows/tests.yml)
+[![Git Hooks](https://github.com/{{ github_org }}/{{ project_name }}/actions/workflows/git-hooks.yml/badge.svg)](https://github.com/{{ github_org }}/{{ project_name }}/actions/workflows/git-hooks.yml)
+
+{{ project_description }}
+
+{% if flavour == "library" %}
+It supports Python {{ min_python }} to {{ max_python }}.
+
+## Install
+
+```sh
+pip install "{{ distribution_name }} @ git+https://github.com/{{ github_org }}/{{ project_name }}@main"
+```
+
+In a notebook cell: `%pip install -q "{{ distribution_name }} @ git+https://github.com/{{ github_org }}/{{ project_name }}@main"`.
+To pin a release, install `@v0.1.0` instead of `@main`.
+
+## Usage
+
+```python
+import {{ package_name }}
+
+print({{ package_name }}.__version__)
+```
+{% else %}
+**Why it is a package.** Each notebook's setup cell runs `pip install` on this repository, so the
+helper `{{ package_name }}` is built as a normal Python package (hatchling) and installs anywhere pip
+does. It supports Python {{ min_python }} to {{ max_python }}; CI runs the notebooks on {{ colab_python }}, the Python of
+Google Colab's current runtime.
+
+## The notebooks
+
+| # | Notebook | Where it is used | Time | Open in Colab |
+|---|---|---|---|---|
+| 01 | Getting started | (the Rakiura step) | 5 min | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/{{ github_org }}/{{ project_name }}/blob/main/notebooks/01_getting_started.ipynb) |
+
+Committed notebooks carry no outputs. Executed copies, run with blank answers, are in
+`notebooks/executed/`. `notebooks/rakiura_steps.json` lists the Rakiura project, step and parts of
+each notebook.
+
+## Run them locally
+
+You need [uv](https://docs.astral.sh/uv/getting-started/installation/). It installs the right
+Python, the locked dependencies (`uv.lock`) and the Rakiura helper.
+
+```sh
+git clone https://github.com/{{ github_org }}/{{ project_name }}.git
+cd {{ project_name }}
+uv run --group notebooks jupyter lab notebooks
+```
+{% endif %}
+
+## Development
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). In short:
+
+```sh
+uv sync                  # a .venv with the package (editable) and the dev tools
+uv run pytest            # the tests, in parallel and in random order
+uv run ruff check .      # lint; `uv run ruff format .` formats
+{% if use_ty %}
+uv run ty check          # type check
+{% endif %}
+{% if flavour == "notebooks" %}
+uv run scripts/run_notebooks.py   # execute every notebook headless into notebooks/executed/
+{% endif %}
+uvx prek install         # run the git hooks on every commit (`uvx prek run --all-files` runs them now)
+```
+
+CI runs the tests on Python {{ python_versions.split() | join(", ") }}{% if flavour == "notebooks" %}, executes every notebook{% endif %}, runs
+the git hooks, checks the dependencies with pip-audit and runs OpenSSF Scorecard, all through
+[Rakiura-Inc's shared workflows](https://github.com/Rakiura-Inc/.github). Renovate keeps the
+dependencies, hooks and workflows current.
+{% if flavour == "library" %}
+
+## Releasing
+
+1. Bump `__version__` in `src/{{ package_name }}/_version.py` and add the entry to `CHANGELOG.md`.
+2. Merge to `main`, then tag that commit and push the tag: `git tag v0.1.0 && git push origin v0.1.0`.
+3. The Release workflow builds the wheel and sdist, records their build provenance and attaches
+   them to a GitHub Release. Check a download with
+   `gh attestation verify <file> --repo {{ github_org }}/{{ project_name }}`.
+{% endif %}
+
+## Template
+
+This repository was generated from [Rakiura-Inc/python-template](https://github.com/Rakiura-Inc/python-template).
+To pull in later template fixes: `uvx copier update --trust`, then review the diff.
+{% if license != "None" %}
+
+## Licence
+
+{{ license }}, copyright {{ copyright_year }} {{ author_name }}. See [LICENSE](LICENSE).
+{% endif %}
