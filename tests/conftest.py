@@ -21,8 +21,20 @@ ANSWERS = {
 
 
 def generate(destination: Path, src_path: Path = TEMPLATE, **answers: str) -> Path:
-    """Generate a project with the template's defaults for every answer not given."""
-    run_copy(src_path=str(src_path), dst_path=str(destination), data=answers, defaults=True, unsafe=True, quiet=True)
+    """Generate a project with the template's defaults for every answer not given.
+
+    vcs_ref="HEAD" renders the template as it is in the working tree, uncommitted edits included.
+    Without it Copier renders the latest tag, and a local run would test the last release instead.
+    """
+    run_copy(
+        src_path=str(src_path),
+        dst_path=str(destination),
+        data=answers,
+        vcs_ref="HEAD",
+        defaults=True,
+        unsafe=True,
+        quiet=True,
+    )
     return destination
 
 

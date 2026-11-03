@@ -80,8 +80,9 @@ dependencies, hooks and workflows current.
 1. Bump `__version__` in `src/{{ package_name }}/_version.py` and add the entry to `CHANGELOG.md`.
 2. Merge to `main`, then tag that commit and push the tag: `git tag v0.1.0 && git push origin v0.1.0`.
 3. The Release workflow builds the wheel and sdist, records their build provenance and attaches
-   them to a GitHub Release. Check a download with
-   `gh attestation verify <file> --repo {{ github_org }}/{{ project_name }}`.
+   them to a GitHub Release. The shared release workflow signs the provenance, so check a
+   download with
+   `gh attestation verify <file> --repo {{ github_org }}/{{ project_name }} --signer-workflow Rakiura-Inc/.github/.github/workflows/release.yml`.
 {% endif %}
 
 ## Template
@@ -92,5 +93,5 @@ To pull in later template fixes: `uvx copier update --trust`, then review the di
 
 ## Licence
 
-{{ license }}, copyright {{ copyright_year }} {{ author_name }}. See [LICENSE](LICENSE).
+{{ license }}, copyright {{ copyright_year }} {{ author_name.rstrip('.') }}. See [LICENSE](LICENSE).
 {% endif %}

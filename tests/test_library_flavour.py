@@ -43,6 +43,11 @@ def test_release_uses_the_shared_workflow_with_least_permissions(library: Path) 
     assert "attestations: write" in release
 
 
+def test_readme_verifies_the_attestation_against_the_shared_workflow(library: Path) -> None:
+    readme = (library / "README.md").read_text(encoding="utf-8")
+    assert "--signer-workflow Rakiura-Inc/.github/.github/workflows/release.yml" in readme
+
+
 def test_ci_tests_every_supported_python(library: Path) -> None:
     tests = (library / ".github/workflows/tests.yml").read_text(encoding="utf-8")
     assert 'python-versions: "[\\"3.11\\", \\"3.12\\", \\"3.13\\", \\"3.14\\", \\"3.15\\"]"' in tests
