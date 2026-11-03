@@ -1,0 +1,47 @@
+"""The notebooks themselves: committed without outputs, listed in rakiura_steps.json, installing
+the helper from this repository."""
+
+import json
+import re
+from pathlib import Path
+
+import pytest
+
+NOTEBOOKS = Path(__file__).resolve().parent.parent / "notebooks"
+TEACHING_NOTEBOOKS = sorted(NOTEBOOKS.glob("[0-9][0-9]_*.ipynb"))
+STEPS = json.loads((NOTEBOOKS / "rakiura_steps.json").read_text(encoding="utf-8"))
+DONE_CALL = re.compile(r"""portal\.done\(\s*["']([^"']+)["']""")
+
+
+def code_cells(path: Path) -> list[dict]:
+    """The code cells of a notebook, as stored on disk."""
+    cells = json.loads(path.read_text(encoding="utf-8"))["cells"]
+    return [cell for cell in cells if cell["cell_type"] == "code"]
+
+
+def test_there_are_teaching_notebooks() -> None:
+    assert TEACHING_NOTEBOOKS
+
+
+def test_every_notebook_is_listed_in_rakiura_steps() -> None:
+    assert sorted(STEPS["notebooks"]) == [path.name for path in TEACHING_NOTEBOOKS]
+
+
+@pytest.mark.parametrize("path", TEACHING_NOTEBOOKS, ids=lambda path: path.name)
+def test_committed_without_outputs(path: Path) -> None:
+    for cell in code_cells(path):
+        assert cell["outputs"] == []
+        assert cell["execution_count"] is None
+
+
+@pytest.mark.parametrize("path", TEACHING_NOTEBOOKS, ids=lambda path: path.name)
+def test_setup_cell_installs_this_repository(path: Path) -> None:
+    setup = "".join(code_cells(path)[0]["source"])
+    assert "git+https://github.com/{{ github_org }}/{{ project_name }}@main" in setup
+    assert f'NOTEBOOK = "notebooks/{path.name}"' in setup
+
+
+@pytest.mark.parametrize("path", TEACHING_NOTEBOOKS, ids=lambda path: path.name)
+def test_every_ticked_part_is_listed(path: Path) -> None:
+    source = "".join("".join(cell["source"]) for cell in code_cells(path))
+    assert set(DONE_CALL.findall(source)) <= set(STEPS["notebooks"][path.name]["parts"])

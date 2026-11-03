@@ -1,0 +1,9 @@
+"""{{ package_name }}: the plumbing behind the notebooks, so the cells keep only what is being taught.
+
+The notebooks install it from GitHub in their setup cell; see the README.
+"""
+
+from . import checks, portal
+from ._version import __version__
+
+__all__ = ("__version__", "checks", "portal")

@@ -1,0 +1,54 @@
+# The steps live in the shared workflows: https://github.com/Rakiura-Inc/.github
+
+name: "Tests"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request: ~
+{% if flavour == "notebooks" %}
+  schedule:
+    - cron: "0 6 * * 1"  # weekly: run the notebooks against their live data sources
+{% endif %}
+
+permissions: {}
+
+concurrency:
+  group: {{ '${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}' }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests
+    permissions:
+      contents: read  # check out the repository
+    uses: Rakiura-Inc/.github/.github/workflows/python-tests.yml@a9d8c7ab6db197d7b715098d6f91dd462fd8e87e  # v1.0.0
+    with:
+      python-versions: "[{% for v in python_versions.split() %}\"{{ v }}\"{{ ", " if not loop.last }}{% endfor %}]"
+{% if flavour == "notebooks" %}
+      sync-args: --locked
+{% endif %}
+{% if use_ty %}
+      type-check: true
+{% endif %}
+      import-check: "import {{ package_name }}; print({{ package_name }}.__version__, {{ package_name }}.__file__)"
+{% if flavour == "library" %}
+      # What a `pip install git+https://...` gets: the wheel alone, tested again from outside the checkout.
+      wheel-tests: src/tests
+{% endif %}
+{% if flavour == "notebooks" %}
+
+  notebooks:
+    name: Notebooks
+    permissions:
+      contents: read  # check out the repository
+    uses: Rakiura-Inc/.github/.github/workflows/notebooks-execute.yml@a9d8c7ab6db197d7b715098d6f91dd462fd8e87e  # v1.0.0
+    with:
+      python-version: "{{ colab_python }}"  # Google Colab's current runtime
+      # To cache downloaded data between runs (the weekly run skips it and downloads afresh):
+      # cache-path: notebooks/data
+      # cache-key-files: {{ package_name }}/manifests/*.json
+      # use-cache: {{ "${{ github.event_name != 'schedule' }}" }}
+{% endif %}

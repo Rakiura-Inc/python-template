@@ -1,0 +1,25 @@
+# Push a tag like v0.2.0 (matching src/{{ package_name }}/_version.py) to build the package, record
+# its build provenance and attach the wheel and sdist to a GitHub Release. The steps live in the
+# shared workflows: https://github.com/Rakiura-Inc/.github
+
+name: "Release"
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions: {}
+
+concurrency:
+  group: {{ '${{ github.workflow }}' }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release
+    permissions:
+      contents: write  # create the GitHub Release and upload the files
+      id-token: write  # sign the build provenance attestation
+      attestations: write  # store the build provenance attestation
+    uses: Rakiura-Inc/.github/.github/workflows/release.yml@a9d8c7ab6db197d7b715098d6f91dd462fd8e87e  # v1.0.0

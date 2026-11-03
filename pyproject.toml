@@ -1,0 +1,37 @@
+[project]
+name = "rakiura-python-template"
+version = "0.1.0"
+description = "Copier template for Rakiura-Inc Python repositories: libraries and teaching notebooks."
+license = "MIT"
+authors = [ { name = "Rakiura Inc." } ]
+requires-python = ">=3.11"
+classifiers = [
+    "Private :: Do Not Upload",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+]
+dependencies = []
+
+[dependency-groups]
+dev = [
+    # Having ruff in the venv helps with IDE's auto lint/format integrations
+    "ruff==0.17.3",
+    { include-group = "pytest" },
+]
+pytest = [
+    "copier==9.19.1",
+    # The tests run each generated project's git hooks.
+    "prek==0.5.9",
+    "pytest==9.2.0",
+    "pytest-randomly==5.0.0",
+    "pytest-xdist==3.8.0",
+]
+
+[tool.uv]
+# The earliest version that supports the current lock file revision
+required-version = ">=0.8.4"
+package = false

@@ -1,0 +1,24 @@
+# Every hook in .pre-commit-config.yaml, on every file. The steps live in the shared workflows:
+# https://github.com/Rakiura-Inc/.github
+
+name: "Git Hooks"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request: ~
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  git-hooks:
+    name: Git hooks
+    permissions:
+      contents: read  # check out the repository
+    uses: Rakiura-Inc/.github/.github/workflows/git-hooks.yml@a9d8c7ab6db197d7b715098d6f91dd462fd8e87e  # v1.0.0

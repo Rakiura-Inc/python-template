@@ -1,0 +1,20 @@
+import pytest
+
+from {{ package_name }}.checks import check_close
+
+
+def test_an_answer_within_the_tolerance_passes() -> None:
+    feedback = check_close("mean", 4.02, expected=4.0, tolerance=0.05)
+    assert feedback.passed
+    assert "right" in str(feedback)
+
+
+@pytest.mark.parametrize("value", [3.5, 4.5])
+def test_an_answer_outside_the_tolerance_fails(value: float) -> None:
+    assert not check_close("mean", value, expected=4.0, tolerance=0.05).passed
+
+
+def test_a_missing_answer_fails_with_a_hint() -> None:
+    feedback = check_close("mean", None, expected=4.0, tolerance=0.05)
+    assert not feedback.passed
+    assert "not answered" in feedback.message

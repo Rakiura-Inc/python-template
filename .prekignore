@@ -1,0 +1,2 @@
+# The generated projects' hooks run in the template tests, against the generated files.
+template/

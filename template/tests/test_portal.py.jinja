@@ -1,0 +1,9 @@
+import pytest
+
+from {{ package_name }} import portal
+
+
+def test_offline_mode_never_connects(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("RAKIURA_LIVE", "0")
+    assert portal.connect("notebooks/01_getting_started.ipynb") is False
+    assert portal.done("getting-started-mean") is False

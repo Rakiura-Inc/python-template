@@ -1,0 +1,10 @@
+[pytest]
+testpaths = [ "tests" ]
+addopts = [
+    # Enable parallelization
+    "-n", "auto",
+]
+filterwarnings = [
+    # Copying from a working tree with uncommitted changes is what local development does.
+    "ignore::copier._vcs.DirtyLocalWarning",
+]

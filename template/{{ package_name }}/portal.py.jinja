@@ -1,0 +1,39 @@
+"""Optional connection to Rakiura through the rakiura helper (https://github.com/Rakiura-Inc/rakiura-py).
+
+A notebook works without it: when the helper is missing, or RAKIURA_LIVE=0 (headless runs and CI),
+every call here does nothing and returns False.
+"""
+
+import importlib
+import os
+from types import ModuleType
+
+__all__ = ("connect", "done")
+
+REPOSITORY = "{{ github_org }}/{{ project_name }}"
+_state = {"connected": False}
+
+
+def _helper() -> ModuleType | None:
+    """The rakiura module, or None when it is not installed or the run is offline."""
+    if os.environ.get("RAKIURA_LIVE") == "0":
+        return None
+    try:
+        return importlib.import_module("rakiura")
+    except ImportError:
+        return None
+
+
+def connect(notebook: str) -> bool:
+    """Connect this session to Rakiura for the notebook at this path in the repository."""
+    rakiura = _helper()
+    _state["connected"] = bool(rakiura and rakiura.start(notebook=notebook, repo=REPOSITORY))
+    return _state["connected"]
+
+
+def done(part: str) -> bool:
+    """Tick a part of the notebook on its Rakiura step, when connected."""
+    rakiura = _helper()
+    if not (_state["connected"] and rakiura):
+        return False
+    return bool(rakiura.done(part))

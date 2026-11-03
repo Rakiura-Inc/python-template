@@ -1,0 +1,7 @@
+import re
+
+import {{ package_name }}
+
+
+def test_version_is_a_release_number() -> None:
+    assert re.fullmatch(r"\d+\.\d+\.\d+", {{ package_name }}.__version__)
